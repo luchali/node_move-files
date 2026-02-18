@@ -14,14 +14,13 @@ async function validateSource(source) {
 async function setDestPath(destination, source) {
   let destPath;
 
-  if (destination.endsWith('/')) {
+  if (destination.endsWith(path.sep)) {
     try {
       const destStat = await fs.stat(destination);
 
       if (!destStat.isDirectory()) {
         throw new Error('Destination is not a directory');
       }
-
       destPath = path.join(destination, path.basename(source));
     } catch (error) {
       throw new Error('Destination path is invalid');
@@ -36,11 +35,22 @@ async function setDestPath(destination, source) {
         destPath = destination;
       }
     } catch (error) {
-      destPath = destination;
+      const parentDir = path.dirname(destination);
+
+      try {
+        const parentStat = await fs.stat(parentDir);
+
+        if (!parentStat.isDirectory()) {
+          throw new Error('Destination parent is not a directory');
+        }
+        destPath = destination;
+      } catch (parentError) {
+        throw new Error('Destination directory does not exist');
+      }
     }
   }
 
-  return destPath;
+  return path.resolve(destPath);
 }
 
 async function main() {
@@ -53,9 +63,17 @@ async function main() {
   }
 
   const absoluteSource = path.resolve(source);
-  const absoluteDestination = path.resolve(destination);
+  let destPath;
 
-  if (absoluteSource === absoluteDestination) {
+  try {
+    destPath = await setDestPath(destination, absoluteSource);
+  } catch (error) {
+    console.error('Error with destination: ' + error.message);
+
+    return;
+  }
+
+  if (absoluteSource === destPath) {
     return;
   }
 
@@ -66,8 +84,6 @@ async function main() {
 
     return;
   }
-
-  const destPath = await setDestPath(destination, absoluteSource);
 
   try {
     await fs.rename(absoluteSource, destPath);
