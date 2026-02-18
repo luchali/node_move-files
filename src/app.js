@@ -19,11 +19,11 @@ async function setDestPath(destination, source) {
       const destStat = await fs.stat(destination);
 
       if (!destStat.isDirectory()) {
-        throw new Error('Destination is not a directory');
+        throw new Error('Destination is not a directory!');
       }
       destPath = path.join(destination, path.basename(source));
     } catch (error) {
-      throw new Error('Destination path is invalid');
+      throw new Error('Destination path is invalid!');
     }
   } else {
     try {
