@@ -14,7 +14,7 @@ async function validateSource(source) {
 async function setDestPath(destination, source) {
   let destPath;
 
-  if (destination.endsWith(path.sep)) {
+  if (destination.endsWith('/') || destination.endsWith(path.sep)) {
     try {
       const destStat = await fs.stat(destination);
 
@@ -23,7 +23,7 @@ async function setDestPath(destination, source) {
       }
       destPath = path.join(destination, path.basename(source));
     } catch (error) {
-      throw new Error('Destination path is invalid!');
+      throw new Error('Destination directory does not exist');
     }
   } else {
     try {
@@ -73,15 +73,15 @@ async function main() {
     return;
   }
 
-  if (absoluteSource === destPath) {
-    return;
-  }
-
   try {
     await validateSource(absoluteSource);
   } catch (error) {
     console.error('Error validating source file: ' + error.message);
 
+    return;
+  }
+
+  if (absoluteSource === destPath) {
     return;
   }
 
